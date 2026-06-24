@@ -3,21 +3,18 @@ namespace DomainForge.Modules.Wallets.Domain.ValueObjects;
 public sealed class Money : IEquatable<Money>
 {
     public decimal Amount { get; }
-    public string Currency { get; }
+    public Currency Currency { get; }
 
-    private Money(decimal amount, string currency)
+    private Money(decimal amount, Currency currency)
     {
         if (amount < 0)
             throw new ArgumentException("Money amount cannot be negative.");
 
-        if (string.IsNullOrWhiteSpace(currency))
-            throw new ArgumentException("Currency is required.");
-
+        Currency = currency ?? throw new ArgumentNullException(nameof(currency));
         Amount = amount;
-        Currency = currency;
     }
 
-    public static Money Create(decimal amount, string currency)
+    public static Money Create(decimal amount, Currency currency)
         => new(amount, currency);
 
     public Money Add(Money other)
@@ -29,6 +26,7 @@ public sealed class Money : IEquatable<Money>
     public Money Subtract(Money other)
     {
         EnsureSameCurrency(other);
+
         if (other.Amount > Amount)
             throw new InvalidOperationException("Insufficient money.");
 
@@ -37,14 +35,16 @@ public sealed class Money : IEquatable<Money>
 
     private void EnsureSameCurrency(Money other)
     {
-        if (Currency != other.Currency)
+        if (!Currency.Equals(other.Currency))
             throw new InvalidOperationException("Currency mismatch.");
     }
 
     public bool Equals(Money? other)
-        => other is not null && Amount == other.Amount && Currency == other.Currency;
+        => other is not null && Amount == other.Amount && Currency.Equals(other.Currency);
 
-    public override bool Equals(object? obj) => obj is Money other && Equals(other);
+    public override bool Equals(object? obj)
+        => obj is Money other && Equals(other);
 
-    public override int GetHashCode() => HashCode.Combine(Amount, Currency);
+    public override int GetHashCode()
+        => HashCode.Combine(Amount, Currency);
 }

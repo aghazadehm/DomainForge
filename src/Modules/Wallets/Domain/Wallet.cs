@@ -13,9 +13,7 @@ public sealed class Wallet
     public WalletType Type { get; private set; }
     public WalletState State { get; private set; }
 
-    private Wallet()
-    {
-    }
+    private Wallet() { }
 
     private Wallet(WalletId id, OwnerId ownerId, WalletType type, Money initialBalance)
     {
@@ -27,10 +25,7 @@ public sealed class Wallet
         State = WalletState.Active;
     }
 
-    public static Wallet Create(
-        OwnerId ownerId,
-        WalletType type,
-        Money initialBalance)
+    public static Wallet Create(OwnerId ownerId, WalletType type, Money initialBalance)
         => new(WalletId.New(), ownerId, type, initialBalance);
 
     public void Deposit(Money amount)
@@ -47,6 +42,28 @@ public sealed class Wallet
             throw new InsufficientBalanceException();
 
         AvailableBalance = AvailableBalance.Subtract(amount);
+    }
+
+    public void ReserveMoney(Money amount)
+    {
+        EnsureActive();
+
+        if (amount.Amount > AvailableBalance.Amount)
+            throw new InsufficientBalanceException();
+
+        AvailableBalance = AvailableBalance.Subtract(amount);
+        ReservedBalance = ReservedBalance.Add(amount);
+    }
+
+    public void ReleaseReservation(Money amount)
+    {
+        ReservedBalance = ReservedBalance.Subtract(amount);
+        AvailableBalance = AvailableBalance.Add(amount);
+    }
+
+    public void CommitReservedMoney(Money amount)
+    {
+        ReservedBalance = ReservedBalance.Subtract(amount);
     }
 
     public void Freeze()

@@ -46,4 +46,32 @@ public class WalletTests
         wallet.Freeze();
         Assert.Equal(WalletState.Frozen, wallet.State);
     }
+
+    [Fact]
+    public void Should_reserve_money()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        Assert.Equal(70, wallet.AvailableBalance.Amount);
+        Assert.Equal(30, wallet.ReservedBalance.Amount);
+    }
+
+    [Fact]
+    public void Should_release_reserved_money()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        wallet.ReleaseReservation(Money.Create(30, Currency.USD));
+        Assert.Equal(100, wallet.AvailableBalance.Amount);
+        Assert.Equal(0, wallet.ReservedBalance.Amount);
+    }
+
+    [Fact]
+    public void Should_commit_reserved_money()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        wallet.CommitReservedMoney(Money.Create(30, Currency.USD));
+        Assert.Equal(0, wallet.ReservedBalance.Amount);
+    }
 }

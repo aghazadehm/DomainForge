@@ -1,2 +1,17 @@
 <Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Wallets/" />
+  <Folder Name="/src/Modules/Wallets/Application/">
+    <Project Path="src/Modules/Wallets/Application/Wallets.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Wallets/Contracts/">
+    <Project Path="src/Modules/Wallets/Contracts/Wallets.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Wallets/Domain/">
+    <Project Path="src/Modules/Wallets/Domain/Wallets.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Wallets/Infrastructure/">
+    <Project Path="src/Modules/Wallets/Infrastructure/Wallets.Infrastructure.csproj" />
+  </Folder>
 </Solution>

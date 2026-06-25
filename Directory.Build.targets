@@ -1,25 +1,7 @@
 <Project>
 
-  <!-- Ensure clean artifacts structure on build -->
-  <Target Name="EnsureArtifactsStructure" BeforeTargets="Build">
-    <MakeDir Directories="$(MSBuildThisFileDirectory)artifacts/build" />
-    <MakeDir Directories="$(MSBuildThisFileDirectory)artifacts/obj" />
-  </Target>
+  <PropertyGroup>
+    <BaseOutputPath>artifacts\build\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
 
-  <!-- Optional: Clean artifacts on clean -->
-  <Target Name="CleanArtifacts" AfterTargets="Clean">
-    <RemoveDir Directories="$(MSBuildThisFileDirectory)artifacts" />
-  </Target>
-
-  <!-- Prevent accidental output outside artifacts -->
-  <Target Name="EnforceOutputPathPolicy" BeforeTargets="Build">
-    <Error Condition="'$(OutputPath)' != '' 
-                      and !$(OutputPath.Contains('artifacts'))"
-           Text="OutputPath must be under /artifacts. Current: $(OutputPath)" />
-  </Target>
-
-  <Target Name="CopyTestArtifacts" AfterTargets="Test">
-    <Copy SourceFiles="@(TestResults)" 
-          DestinationFolder="$(MSBuildThisFileDirectory)artifacts/test-results" />
-  </Target>
 </Project>

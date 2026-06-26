@@ -3,15 +3,18 @@
   <Folder Name="/src/Modules/" />
   <Folder Name="/src/Modules/Wallets/" />
   <Folder Name="/src/Modules/Wallets/Application/">
-    <Project Path="src/Modules/Wallets/Application/Wallets.Application.csproj" />
+    <Project Path="src/Modules/Wallets/Application/DomainForge.Wallets.Application.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Wallets/Contracts/">
-    <Project Path="src/Modules/Wallets/Contracts/Wallets.Contracts.csproj" />
+    <Project Path="src/Modules/Wallets/Contracts/DomainForge.Wallets.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Wallets/Domain/">
-    <Project Path="src/Modules/Wallets/Domain/Wallets.Domain.csproj" />
+    <Project Path="src/Modules/Wallets/Domain/DomainForge.Wallets.Domain.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Wallets/Infrastructure/">
-    <Project Path="src/Modules/Wallets/Infrastructure/Wallets.Infrastructure.csproj" />
+    <Project Path="src/Modules/Wallets/Infrastructure/DomainForge.Wallets.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/SharedKernel/">
+    <Project Path="src/SharedKernel/DomainForge.SharedKernel.csproj" />
   </Folder>
 </Solution>

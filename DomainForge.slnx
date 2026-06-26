@@ -1,5 +1,13 @@
 <Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/DomainForge.AcceptanceTests/DomainForge.AcceptanceTests.csproj" />
+  </Folder>
+  <Folder Name="/docs/" />
+  <Folder Name="/build/" />
   <Folder Name="/src/" />
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/DomainForge.Host.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/" />
   <Folder Name="/src/Modules/Wallets/" />
   <Folder Name="/src/Modules/Wallets/Application/">
@@ -13,6 +21,9 @@
   </Folder>
   <Folder Name="/src/Modules/Wallets/Infrastructure/">
     <Project Path="src/Modules/Wallets/Infrastructure/DomainForge.Wallets.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Wallets/Tests.Unit/">
+    <Project Path="src/Modules/Wallets/Tests.Unit/DomainForge.Wallets.Tests.Unit.csproj" />
   </Folder>
   <Folder Name="/src/SharedKernel/">
     <Project Path="src/SharedKernel/DomainForge.SharedKernel.csproj" />

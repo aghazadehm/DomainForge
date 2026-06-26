@@ -1,3 +1,5 @@
+namespace DomainForge.SharedKernel.Domain.Events;
+
 public abstract record DomainEvent
 {
     public Guid EventId { get; init; } = Guid.NewGuid();

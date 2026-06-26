@@ -19,4 +19,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Domain\DomainForge.Wallets.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

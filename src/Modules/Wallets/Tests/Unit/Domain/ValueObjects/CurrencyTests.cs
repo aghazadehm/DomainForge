@@ -1,5 +1,5 @@
-using DomainForge.Modules.Wallets.Domain.ValueObjects;
-using Xunit;
+
+namespace DomainForge.Modules.Wallets.Domain.ValueObjects;
 
 public class CurrencyTests
 {

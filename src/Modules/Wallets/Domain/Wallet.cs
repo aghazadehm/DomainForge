@@ -35,6 +35,7 @@ public sealed class Wallet : AggregateRoot
     public void Deposit(Money amount)
     {
         EnsureActive();
+        EnsureSameCurrency(amount);
         AvailableBalance = AvailableBalance.Add(amount);
         Raise(new MoneyDeposited(Id, amount, null));
     }
@@ -42,6 +43,7 @@ public sealed class Wallet : AggregateRoot
     public void Withdraw(Money amount)
     {
         EnsureActive();
+        EnsureSameCurrency(amount);
 
         if (amount.Amount > AvailableBalance.Amount)
             throw new InsufficientBalanceException();
@@ -53,6 +55,7 @@ public sealed class Wallet : AggregateRoot
     public void ReserveMoney(Money amount)
     {
         EnsureActive();
+        EnsureSameCurrency(amount);
 
         if (amount.Amount > AvailableBalance.Amount)
             throw new InsufficientBalanceException();
@@ -65,6 +68,7 @@ public sealed class Wallet : AggregateRoot
     public void ReleaseReservation(Money amount)
     {
         EnsureActive();
+        EnsureSameCurrency(amount);
         ReservedBalance = ReservedBalance.Subtract(amount);
         AvailableBalance = AvailableBalance.Add(amount);
         Raise(new MoneyReservationReleased(Id, Guid.NewGuid(), amount));
@@ -73,6 +77,7 @@ public sealed class Wallet : AggregateRoot
     public void CommitReservedMoney(Money amount)
     {
         EnsureActive();
+        EnsureSameCurrency(amount);
         ReservedBalance = ReservedBalance.Subtract(amount);
         Raise(new MoneyReservationCommitted(Id, Guid.NewGuid(), amount));
     }
@@ -87,5 +92,11 @@ public sealed class Wallet : AggregateRoot
     {
         if (State != WalletState.Active)
             throw new InvalidOperationException("Wallet is not active.");
+    }
+
+    private void EnsureSameCurrency(Money amount)
+    {
+        if (!AvailableBalance.Currency.Equals(amount.Currency))
+            throw new CurrencyMismatchException();
     }
 }

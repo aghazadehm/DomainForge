@@ -197,4 +197,41 @@ public class WalletTests
         wallet.Freeze();
         Assert.Throws<InvalidOperationException>(() => wallet.CommitReservedMoney(Money.Create(30, Currency.USD)));
     }
+
+    [Fact]
+    public void Should_not_deposit_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.Deposit(Money.Create(50, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_not_withdraw_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.Withdraw(Money.Create(30, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_not_reserve_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.ReserveMoney(Money.Create(30, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_not_release_reservation_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.ReleaseReservation(Money.Create(30, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_not_commit_reservation_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.CommitReservedMoney(Money.Create(30, Currency.EUR)));
+    }
 }

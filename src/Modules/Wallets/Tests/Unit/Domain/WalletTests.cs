@@ -1,0 +1,318 @@
+using DomainForge.Modules.Wallets.Domain;
+using DomainForge.Modules.Wallets.Domain.Events;
+using DomainForge.Modules.Wallets.Domain.Exceptions;
+using DomainForge.Modules.Wallets.Domain.States;
+using DomainForge.Modules.Wallets.Domain.ValueObjects;
+using Xunit;
+
+namespace DomainForge.Modules.Wallets.Tests.Unit.Domain;
+
+public class WalletTests
+{
+    [Fact]
+    public void Should_create_active_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Equal(WalletState.Active, wallet.State);
+        Assert.Equal(0m, wallet.ReservedBalance.Amount);
+    }
+
+    [Fact]
+    public void Should_raise_WalletCreated_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        var events = wallet.DomainEvents.OfType<WalletCreated>().ToList();
+        Assert.Single(events);
+        Assert.Equal(wallet.Id, events[0].WalletId);
+        Assert.Equal(wallet.OwnerId, events[0].OwnerId);
+    }
+
+    [Fact]
+    public void Should_deposit_money_into_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Deposit(Money.Create(50, Currency.USD));
+        Assert.Equal(150m, wallet.AvailableBalance.Amount);
+    }
+
+    [Fact]
+    public void Should_raise_MoneyDeposited_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ClearDomainEvents();
+        wallet.Deposit(Money.Create(50, Currency.USD));
+        var events = wallet.DomainEvents.OfType<MoneyDeposited>().ToList();
+        Assert.Single(events);
+        Assert.Equal(wallet.Id, events[0].WalletId);
+        Assert.Equal(50m, events[0].Amount.Amount);
+    }
+
+    [Fact]
+    public void Should_withdraw_money_from_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Withdraw(Money.Create(40, Currency.USD));
+        Assert.Equal(60m, wallet.AvailableBalance.Amount);
+    }
+
+    [Fact]
+    public void Should_raise_MoneyWithdrawn_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ClearDomainEvents();
+        wallet.Withdraw(Money.Create(40, Currency.USD));
+        var events = wallet.DomainEvents.OfType<MoneyWithdrawn>().ToList();
+        Assert.Single(events);
+        Assert.Equal(40m, events[0].Amount.Amount);
+    }
+
+    [Fact]
+    public void Should_not_withdraw_more_than_available_balance()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<InsufficientBalanceException>(() => wallet.Withdraw(Money.Create(200, Currency.USD)));
+    }
+
+    [Fact]
+    public void Should_freeze_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Compliance review");
+        Assert.Equal(WalletState.Frozen, wallet.State);
+    }
+
+    [Fact]
+    public void Should_raise_WalletFrozen_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ClearDomainEvents();
+        wallet.Freeze("Suspicious activity");
+        var events = wallet.DomainEvents.OfType<WalletFrozen>().ToList();
+        Assert.Single(events);
+        Assert.Equal(wallet.Id, events[0].WalletId);
+        Assert.Equal("Suspicious activity", events[0].Reason);
+    }
+
+    [Fact]
+    public void Should_reserve_money()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        Assert.Equal(70m, wallet.AvailableBalance.Amount);
+        Assert.Equal(30m, wallet.ReservedBalance.Amount);
+    }
+
+    [Fact]
+    public void Should_raise_MoneyReserved_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ClearDomainEvents();
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        var events = wallet.DomainEvents.OfType<MoneyReserved>().ToList();
+        Assert.Single(events);
+        Assert.Equal(30m, events[0].Amount.Amount);
+        Assert.NotEqual(Guid.Empty, events[0].ReservationId);
+    }
+
+    [Fact]
+    public void Should_release_reserved_money()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        wallet.ReleaseReservation(Money.Create(30, Currency.USD));
+        Assert.Equal(100m, wallet.AvailableBalance.Amount);
+        Assert.Equal(0m, wallet.ReservedBalance.Amount);
+    }
+
+    [Fact]
+    public void Should_raise_MoneyReservationReleased_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        wallet.ClearDomainEvents();
+        wallet.ReleaseReservation(Money.Create(30, Currency.USD));
+        var events = wallet.DomainEvents.OfType<MoneyReservationReleased>().ToList();
+        Assert.Single(events);
+        Assert.Equal(30m, events[0].Amount.Amount);
+    }
+
+    [Fact]
+    public void Should_commit_reserved_money()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        wallet.CommitReservedMoney(Money.Create(30, Currency.USD));
+        Assert.Equal(0m, wallet.ReservedBalance.Amount);
+    }
+
+    [Fact]
+    public void Should_raise_MoneyReservationCommitted_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        wallet.ClearDomainEvents();
+        wallet.CommitReservedMoney(Money.Create(30, Currency.USD));
+        var events = wallet.DomainEvents.OfType<MoneyReservationCommitted>().ToList();
+        Assert.Single(events);
+        Assert.Equal(30m, events[0].Amount.Amount);
+    }
+
+    [Fact]
+    public void Should_not_deposit_to_frozen_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Test reason");
+        Assert.Throws<InvalidOperationException>(() => wallet.Deposit(Money.Create(50, Currency.USD)));
+    }
+
+    [Fact]
+    public void Should_not_withdraw_from_frozen_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Test reason");
+        Assert.Throws<InvalidOperationException>(() => wallet.Withdraw(Money.Create(30, Currency.USD)));
+    }
+
+    [Fact]
+    public void Should_not_reserve_on_frozen_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Test reason");
+        Assert.Throws<InvalidOperationException>(() => wallet.ReserveMoney(Money.Create(30, Currency.USD)));
+    }
+
+    [Fact]
+    public void Should_not_release_reservation_on_frozen_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        wallet.Freeze("Test reason");
+        Assert.Throws<InvalidOperationException>(() => wallet.ReleaseReservation(Money.Create(30, Currency.USD)));
+    }
+
+    [Fact]
+    public void Should_not_commit_reservation_on_frozen_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        wallet.Freeze("Test reason");
+        Assert.Throws<InvalidOperationException>(() => wallet.CommitReservedMoney(Money.Create(30, Currency.USD)));
+    }
+
+    [Fact]
+    public void Should_not_deposit_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.Deposit(Money.Create(50, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_not_withdraw_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.Withdraw(Money.Create(30, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_not_reserve_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.ReserveMoney(Money.Create(30, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_not_release_reservation_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.ReleaseReservation(Money.Create(30, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_not_commit_reservation_different_currency()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ReserveMoney(Money.Create(30, Currency.USD));
+        Assert.Throws<CurrencyMismatchException>(() => wallet.CommitReservedMoney(Money.Create(30, Currency.EUR)));
+    }
+
+    [Fact]
+    public void Should_unfreeze_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Temporary hold");
+        wallet.Unfreeze();
+        Assert.Equal(WalletState.Active, wallet.State);
+    }
+
+    [Fact]
+    public void Should_raise_WalletUnfrozen_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Temporary hold");
+        wallet.ClearDomainEvents();
+        wallet.Unfreeze();
+        var events = wallet.DomainEvents.OfType<WalletUnfrozen>().ToList();
+        Assert.Single(events);
+        Assert.Equal(wallet.Id, events[0].WalletId);
+    }
+
+    [Fact]
+    public void Should_not_unfreeze_active_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<InvalidOperationException>(() => wallet.Unfreeze());
+    }
+
+    [Fact]
+    public void Should_close_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Close();
+        Assert.Equal(WalletState.Closed, wallet.State);
+    }
+
+    [Fact]
+    public void Should_raise_WalletClosed_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ClearDomainEvents();
+        wallet.Close();
+        var events = wallet.DomainEvents.OfType<WalletClosed>().ToList();
+        Assert.Single(events);
+        Assert.Equal(wallet.Id, events[0].WalletId);
+    }
+
+    [Fact]
+    public void Should_not_close_already_closed_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Close();
+        Assert.Throws<InvalidOperationException>(() => wallet.Close());
+    }
+
+    [Fact]
+    public void Should_not_freeze_closed_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Close();
+        Assert.Throws<InvalidOperationException>(() => wallet.Freeze("Attempt"));
+    }
+
+    [Fact]
+    public void Should_close_frozen_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Compliance");
+        wallet.Close();
+        Assert.Equal(WalletState.Closed, wallet.State);
+    }
+
+    [Fact]
+    public void Should_not_deposit_to_closed_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Close();
+        Assert.Throws<InvalidOperationException>(() => wallet.Deposit(Money.Create(50, Currency.USD)));
+    }
+}

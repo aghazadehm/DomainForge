@@ -1,7 +1,4 @@
-using DomainForge.Modules.Wallets.Domain.ValueObjects;
-using Xunit;
-
-namespace DomainForge.Modules.Wallets.Tests.Unit.Domain.ValueObjects;
+namespace DomainForge.Modules.Wallets.Domain.ValueObjects;
 
 public class MoneyTests
 {
@@ -13,7 +10,7 @@ public class MoneyTests
 
         var result = first.Add(second);
 
-        Assert.Equal(150, result.Amount);
+        Assert.Equal(150m, result.Amount);
     }
 
     [Fact]

@@ -1,7 +1,4 @@
-using DomainForge.Modules.Wallets.Domain.ValueObjects;
-using Xunit;
-
-namespace DomainForge.Modules.Wallets.Tests.Unit.Domain;
+namespace DomainForge.Modules.Wallets.Domain.ValueObjects;
 
 public class WalletIdTests
 {

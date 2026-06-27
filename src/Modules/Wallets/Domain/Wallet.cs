@@ -1,10 +1,12 @@
+using DomainForge.Modules.Wallets.Domain.Events;
 using DomainForge.Modules.Wallets.Domain.Exceptions;
 using DomainForge.Modules.Wallets.Domain.States;
 using DomainForge.Modules.Wallets.Domain.ValueObjects;
+using DomainForge.SharedKernel.Domain;
 
 namespace DomainForge.Modules.Wallets.Domain;
 
-public sealed class Wallet
+public sealed class Wallet : AggregateRoot
 {
     public WalletId Id { get; private set; }
     public OwnerId OwnerId { get; private set; }
@@ -23,6 +25,8 @@ public sealed class Wallet
         AvailableBalance = initialBalance;
         ReservedBalance = Money.Create(0, initialBalance.Currency);
         State = WalletState.Active;
+
+        Raise(new WalletCreated(id, ownerId, type));
     }
 
     public static Wallet Create(OwnerId ownerId, WalletType type, Money initialBalance)
@@ -31,49 +35,87 @@ public sealed class Wallet
     public void Deposit(Money amount)
     {
         EnsureActive();
+        EnsureSameCurrency(amount);
         AvailableBalance = AvailableBalance.Add(amount);
+        Raise(new MoneyDeposited(Id, amount, null));
     }
 
     public void Withdraw(Money amount)
     {
         EnsureActive();
+        EnsureSameCurrency(amount);
 
         if (amount.Amount > AvailableBalance.Amount)
             throw new InsufficientBalanceException();
 
         AvailableBalance = AvailableBalance.Subtract(amount);
+        Raise(new MoneyWithdrawn(Id, amount, null));
     }
 
     public void ReserveMoney(Money amount)
     {
         EnsureActive();
+        EnsureSameCurrency(amount);
 
         if (amount.Amount > AvailableBalance.Amount)
             throw new InsufficientBalanceException();
 
         AvailableBalance = AvailableBalance.Subtract(amount);
         ReservedBalance = ReservedBalance.Add(amount);
+        Raise(new MoneyReserved(Id, amount, Guid.NewGuid()));
     }
 
     public void ReleaseReservation(Money amount)
     {
+        EnsureActive();
+        EnsureSameCurrency(amount);
         ReservedBalance = ReservedBalance.Subtract(amount);
         AvailableBalance = AvailableBalance.Add(amount);
+        Raise(new MoneyReservationReleased(Id, Guid.NewGuid(), amount));
     }
 
     public void CommitReservedMoney(Money amount)
     {
+        EnsureActive();
+        EnsureSameCurrency(amount);
         ReservedBalance = ReservedBalance.Subtract(amount);
+        Raise(new MoneyReservationCommitted(Id, Guid.NewGuid(), amount));
     }
 
-    public void Freeze()
+    public void Freeze(string reason)
     {
+        EnsureActive();
         State = WalletState.Frozen;
+        Raise(new WalletFrozen(Id, reason));
+    }
+
+    public void Unfreeze()
+    {
+        if (State != WalletState.Frozen)
+            throw new InvalidOperationException("Wallet is not frozen.");
+
+        State = WalletState.Active;
+        Raise(new WalletUnfrozen(Id));
+    }
+
+    public void Close()
+    {
+        if (State == WalletState.Closed)
+            throw new InvalidOperationException("Wallet is already closed.");
+
+        State = WalletState.Closed;
+        Raise(new WalletClosed(Id));
     }
 
     private void EnsureActive()
     {
         if (State != WalletState.Active)
             throw new InvalidOperationException("Wallet is not active.");
+    }
+
+    private void EnsureSameCurrency(Money amount)
+    {
+        if (!AvailableBalance.Currency.Equals(amount.Currency))
+            throw new CurrencyMismatchException();
     }
 }

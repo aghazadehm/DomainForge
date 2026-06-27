@@ -1,7 +1,0 @@
-<Project>
-
-  <PropertyGroup>
-    <BaseOutputPath>artifacts\build\$(MSBuildProjectName)\</BaseOutputPath>
-  </PropertyGroup>
-
-</Project>

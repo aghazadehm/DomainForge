@@ -64,6 +64,7 @@ public sealed class Wallet : AggregateRoot
 
     public void ReleaseReservation(Money amount)
     {
+        EnsureActive();
         ReservedBalance = ReservedBalance.Subtract(amount);
         AvailableBalance = AvailableBalance.Add(amount);
         Raise(new MoneyReservationReleased(Id, Guid.NewGuid(), amount));
@@ -71,6 +72,7 @@ public sealed class Wallet : AggregateRoot
 
     public void CommitReservedMoney(Money amount)
     {
+        EnsureActive();
         ReservedBalance = ReservedBalance.Subtract(amount);
         Raise(new MoneyReservationCommitted(Id, Guid.NewGuid(), amount));
     }

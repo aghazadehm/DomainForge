@@ -15,8 +15,8 @@ public sealed class Currency : IEquatable<Currency>
     public static Currency Create(string code)
         => new(code);
 
-    public static Currency USD => Create("USD");
-    public static Currency EUR => Create("EUR");
+    public static readonly Currency USD = Create("USD");
+    public static readonly Currency EUR = Create("EUR");
 
     public bool Equals(Currency? other)
         => other is not null && Code == other.Code;

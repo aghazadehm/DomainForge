@@ -12,9 +12,9 @@ public sealed class WalletType : IEquatable<WalletType>
         Code = code.ToUpperInvariant();
     }
 
-    public static WalletType Main => Create("MAIN");
-    public static WalletType Spot => Create("SPOT");
-    public static WalletType Future => Create("FUTURE");
+    public static readonly WalletType Main = Create("MAIN");
+    public static readonly WalletType Spot = Create("SPOT");
+    public static readonly WalletType Future = Create("FUTURE");
 
     public static WalletType Create(string code)
         => new(code);

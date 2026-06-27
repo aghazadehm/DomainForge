@@ -82,10 +82,10 @@ public sealed class Wallet : AggregateRoot
         Raise(new MoneyReservationCommitted(Id, Guid.NewGuid(), amount));
     }
 
-    public void Freeze()
+    public void Freeze(string reason)
     {
         State = WalletState.Frozen;
-        Raise(new WalletFrozen(Id, "Wallet frozen."));
+        Raise(new WalletFrozen(Id, reason));
     }
 
     private void EnsureActive()

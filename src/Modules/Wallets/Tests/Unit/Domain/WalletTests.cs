@@ -77,7 +77,7 @@ public class WalletTests
     public void Should_freeze_wallet()
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
-        wallet.Freeze();
+        wallet.Freeze("Compliance review");
         Assert.Equal(WalletState.Frozen, wallet.State);
     }
 
@@ -86,10 +86,11 @@ public class WalletTests
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         wallet.ClearDomainEvents();
-        wallet.Freeze();
+        wallet.Freeze("Suspicious activity");
         var events = wallet.DomainEvents.OfType<WalletFrozen>().ToList();
         Assert.Single(events);
         Assert.Equal(wallet.Id, events[0].WalletId);
+        Assert.Equal("Suspicious activity", events[0].Reason);
     }
 
     [Fact]
@@ -160,7 +161,7 @@ public class WalletTests
     public void Should_not_deposit_to_frozen_wallet()
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
-        wallet.Freeze();
+        wallet.Freeze("Test reason");
         Assert.Throws<InvalidOperationException>(() => wallet.Deposit(Money.Create(50, Currency.USD)));
     }
 
@@ -168,7 +169,7 @@ public class WalletTests
     public void Should_not_withdraw_from_frozen_wallet()
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
-        wallet.Freeze();
+        wallet.Freeze("Test reason");
         Assert.Throws<InvalidOperationException>(() => wallet.Withdraw(Money.Create(30, Currency.USD)));
     }
 
@@ -176,7 +177,7 @@ public class WalletTests
     public void Should_not_reserve_on_frozen_wallet()
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
-        wallet.Freeze();
+        wallet.Freeze("Test reason");
         Assert.Throws<InvalidOperationException>(() => wallet.ReserveMoney(Money.Create(30, Currency.USD)));
     }
 
@@ -185,7 +186,7 @@ public class WalletTests
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         wallet.ReserveMoney(Money.Create(30, Currency.USD));
-        wallet.Freeze();
+        wallet.Freeze("Test reason");
         Assert.Throws<InvalidOperationException>(() => wallet.ReleaseReservation(Money.Create(30, Currency.USD)));
     }
 
@@ -194,7 +195,7 @@ public class WalletTests
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         wallet.ReserveMoney(Money.Create(30, Currency.USD));
-        wallet.Freeze();
+        wallet.Freeze("Test reason");
         Assert.Throws<InvalidOperationException>(() => wallet.CommitReservedMoney(Money.Create(30, Currency.USD)));
     }
 

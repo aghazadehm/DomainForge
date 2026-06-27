@@ -10,7 +10,7 @@ public class MoneyTests
 
         var result = first.Add(second);
 
-        Assert.Equal(150, result.Amount);
+        Assert.Equal(150m, result.Amount);
     }
 
     [Fact]

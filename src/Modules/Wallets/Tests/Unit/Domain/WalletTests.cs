@@ -14,7 +14,7 @@ public class WalletTests
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         Assert.Equal(WalletState.Active, wallet.State);
-        Assert.Equal(0, wallet.ReservedBalance.Amount);
+        Assert.Equal(0m, wallet.ReservedBalance.Amount);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class WalletTests
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         wallet.Deposit(Money.Create(50, Currency.USD));
-        Assert.Equal(150, wallet.AvailableBalance.Amount);
+        Assert.Equal(150m, wallet.AvailableBalance.Amount);
     }
 
     [Fact]
@@ -44,7 +44,7 @@ public class WalletTests
         var events = wallet.DomainEvents.OfType<MoneyDeposited>().ToList();
         Assert.Single(events);
         Assert.Equal(wallet.Id, events[0].WalletId);
-        Assert.Equal(50, events[0].Amount.Amount);
+        Assert.Equal(50m, events[0].Amount.Amount);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class WalletTests
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         wallet.Withdraw(Money.Create(40, Currency.USD));
-        Assert.Equal(60, wallet.AvailableBalance.Amount);
+        Assert.Equal(60m, wallet.AvailableBalance.Amount);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class WalletTests
         wallet.Withdraw(Money.Create(40, Currency.USD));
         var events = wallet.DomainEvents.OfType<MoneyWithdrawn>().ToList();
         Assert.Single(events);
-        Assert.Equal(40, events[0].Amount.Amount);
+        Assert.Equal(40m, events[0].Amount.Amount);
     }
 
     [Fact]
@@ -98,8 +98,8 @@ public class WalletTests
     {
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         wallet.ReserveMoney(Money.Create(30, Currency.USD));
-        Assert.Equal(70, wallet.AvailableBalance.Amount);
-        Assert.Equal(30, wallet.ReservedBalance.Amount);
+        Assert.Equal(70m, wallet.AvailableBalance.Amount);
+        Assert.Equal(30m, wallet.ReservedBalance.Amount);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class WalletTests
         wallet.ReserveMoney(Money.Create(30, Currency.USD));
         var events = wallet.DomainEvents.OfType<MoneyReserved>().ToList();
         Assert.Single(events);
-        Assert.Equal(30, events[0].Amount.Amount);
+        Assert.Equal(30m, events[0].Amount.Amount);
         Assert.NotEqual(Guid.Empty, events[0].ReservationId);
     }
 
@@ -120,8 +120,8 @@ public class WalletTests
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         wallet.ReserveMoney(Money.Create(30, Currency.USD));
         wallet.ReleaseReservation(Money.Create(30, Currency.USD));
-        Assert.Equal(100, wallet.AvailableBalance.Amount);
-        Assert.Equal(0, wallet.ReservedBalance.Amount);
+        Assert.Equal(100m, wallet.AvailableBalance.Amount);
+        Assert.Equal(0m, wallet.ReservedBalance.Amount);
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public class WalletTests
         wallet.ReleaseReservation(Money.Create(30, Currency.USD));
         var events = wallet.DomainEvents.OfType<MoneyReservationReleased>().ToList();
         Assert.Single(events);
-        Assert.Equal(30, events[0].Amount.Amount);
+        Assert.Equal(30m, events[0].Amount.Amount);
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public class WalletTests
         var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
         wallet.ReserveMoney(Money.Create(30, Currency.USD));
         wallet.CommitReservedMoney(Money.Create(30, Currency.USD));
-        Assert.Equal(0, wallet.ReservedBalance.Amount);
+        Assert.Equal(0m, wallet.ReservedBalance.Amount);
     }
 
     [Fact]
@@ -154,7 +154,7 @@ public class WalletTests
         wallet.CommitReservedMoney(Money.Create(30, Currency.USD));
         var events = wallet.DomainEvents.OfType<MoneyReservationCommitted>().ToList();
         Assert.Single(events);
-        Assert.Equal(30, events[0].Amount.Amount);
+        Assert.Equal(30m, events[0].Amount.Amount);
     }
 
     [Fact]

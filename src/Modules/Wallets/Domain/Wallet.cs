@@ -1,10 +1,12 @@
+using DomainForge.Modules.Wallets.Domain.Events;
 using DomainForge.Modules.Wallets.Domain.Exceptions;
 using DomainForge.Modules.Wallets.Domain.States;
 using DomainForge.Modules.Wallets.Domain.ValueObjects;
+using DomainForge.SharedKernel.Domain;
 
 namespace DomainForge.Modules.Wallets.Domain;
 
-public sealed class Wallet
+public sealed class Wallet : AggregateRoot
 {
     public WalletId Id { get; private set; }
     public OwnerId OwnerId { get; private set; }
@@ -23,6 +25,8 @@ public sealed class Wallet
         AvailableBalance = initialBalance;
         ReservedBalance = Money.Create(0, initialBalance.Currency);
         State = WalletState.Active;
+
+        Raise(new WalletCreated(id, ownerId, type));
     }
 
     public static Wallet Create(OwnerId ownerId, WalletType type, Money initialBalance)
@@ -32,6 +36,7 @@ public sealed class Wallet
     {
         EnsureActive();
         AvailableBalance = AvailableBalance.Add(amount);
+        Raise(new MoneyDeposited(Id, amount, null));
     }
 
     public void Withdraw(Money amount)
@@ -42,6 +47,7 @@ public sealed class Wallet
             throw new InsufficientBalanceException();
 
         AvailableBalance = AvailableBalance.Subtract(amount);
+        Raise(new MoneyWithdrawn(Id, amount, null));
     }
 
     public void ReserveMoney(Money amount)
@@ -53,22 +59,26 @@ public sealed class Wallet
 
         AvailableBalance = AvailableBalance.Subtract(amount);
         ReservedBalance = ReservedBalance.Add(amount);
+        Raise(new MoneyReserved(Id, amount, Guid.NewGuid()));
     }
 
     public void ReleaseReservation(Money amount)
     {
         ReservedBalance = ReservedBalance.Subtract(amount);
         AvailableBalance = AvailableBalance.Add(amount);
+        Raise(new MoneyReservationReleased(Id, Guid.NewGuid(), amount));
     }
 
     public void CommitReservedMoney(Money amount)
     {
         ReservedBalance = ReservedBalance.Subtract(amount);
+        Raise(new MoneyReservationCommitted(Id, Guid.NewGuid(), amount));
     }
 
     public void Freeze()
     {
         State = WalletState.Frozen;
+        Raise(new WalletFrozen(Id, "Wallet frozen."));
     }
 
     private void EnsureActive()

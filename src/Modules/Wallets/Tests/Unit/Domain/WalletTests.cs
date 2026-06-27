@@ -235,4 +235,84 @@ public class WalletTests
         wallet.ReserveMoney(Money.Create(30, Currency.USD));
         Assert.Throws<CurrencyMismatchException>(() => wallet.CommitReservedMoney(Money.Create(30, Currency.EUR)));
     }
+
+    [Fact]
+    public void Should_unfreeze_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Temporary hold");
+        wallet.Unfreeze();
+        Assert.Equal(WalletState.Active, wallet.State);
+    }
+
+    [Fact]
+    public void Should_raise_WalletUnfrozen_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Temporary hold");
+        wallet.ClearDomainEvents();
+        wallet.Unfreeze();
+        var events = wallet.DomainEvents.OfType<WalletUnfrozen>().ToList();
+        Assert.Single(events);
+        Assert.Equal(wallet.Id, events[0].WalletId);
+    }
+
+    [Fact]
+    public void Should_not_unfreeze_active_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        Assert.Throws<InvalidOperationException>(() => wallet.Unfreeze());
+    }
+
+    [Fact]
+    public void Should_close_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Close();
+        Assert.Equal(WalletState.Closed, wallet.State);
+    }
+
+    [Fact]
+    public void Should_raise_WalletClosed_event()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.ClearDomainEvents();
+        wallet.Close();
+        var events = wallet.DomainEvents.OfType<WalletClosed>().ToList();
+        Assert.Single(events);
+        Assert.Equal(wallet.Id, events[0].WalletId);
+    }
+
+    [Fact]
+    public void Should_not_close_already_closed_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Close();
+        Assert.Throws<InvalidOperationException>(() => wallet.Close());
+    }
+
+    [Fact]
+    public void Should_not_freeze_closed_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Close();
+        Assert.Throws<InvalidOperationException>(() => wallet.Freeze("Attempt"));
+    }
+
+    [Fact]
+    public void Should_close_frozen_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Freeze("Compliance");
+        wallet.Close();
+        Assert.Equal(WalletState.Closed, wallet.State);
+    }
+
+    [Fact]
+    public void Should_not_deposit_to_closed_wallet()
+    {
+        var wallet = Wallet.Create(OwnerId.New(), WalletType.Main, Money.Create(100, Currency.USD));
+        wallet.Close();
+        Assert.Throws<InvalidOperationException>(() => wallet.Deposit(Money.Create(50, Currency.USD)));
+    }
 }

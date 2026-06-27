@@ -84,8 +84,27 @@ public sealed class Wallet : AggregateRoot
 
     public void Freeze(string reason)
     {
+        EnsureActive();
         State = WalletState.Frozen;
         Raise(new WalletFrozen(Id, reason));
+    }
+
+    public void Unfreeze()
+    {
+        if (State != WalletState.Frozen)
+            throw new InvalidOperationException("Wallet is not frozen.");
+
+        State = WalletState.Active;
+        Raise(new WalletUnfrozen(Id));
+    }
+
+    public void Close()
+    {
+        if (State == WalletState.Closed)
+            throw new InvalidOperationException("Wallet is already closed.");
+
+        State = WalletState.Closed;
+        Raise(new WalletClosed(Id));
     }
 
     private void EnsureActive()
